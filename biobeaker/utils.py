@@ -1,11 +1,10 @@
 import tensorflow as tf
 import numpy as np
-
+ 
 # From Tensorflow Tutorial
 def get_angles(pos, i, d_model):
     angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
     return pos * angle_rates
-
 
 # From Tensorflow Tutorial
 # positions = total number of positions for each word
