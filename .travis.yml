@@ -1,0 +1,20 @@
+language: python
+dist: bionic
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+install:
+  - sudo apt-get install libcurl4-openssl-dev
+#  - pip install -r requirements.txt
+#  - pip install pytest-benchmark
+  - pip install codecov
+  - pip install pytest-cov
+  - pip install tensorflow
+  - pip install numpy
+  - pip install tensorflow-addons
+script:
+  - python -m pytest --cov-report=xml --cov=biobeaker
+
+after_success:
+  - codecov
