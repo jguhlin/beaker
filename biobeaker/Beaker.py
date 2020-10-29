@@ -10,7 +10,7 @@ from tensorflow.keras.layers import (
     BatchNormalization,
     Reshape,
 )
-from utils import (
+from .utils import (
     get_angles,
     positional_encoding,
     discriminator_layer,
@@ -18,7 +18,6 @@ from utils import (
 
 
 def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
-    print(activation)
     return tf.keras.Sequential(
         [
             tf.keras.layers.Dense(intermediate_dims, activation=activation),
@@ -142,7 +141,7 @@ class BEAKER(tf.keras.Model):
         positional_encoding_dims=16,
         activation=tf.nn.swish,
     ):
-        super(Transformer, self).__init__()
+        super(BEAKER, self).__init__()
 
         self.encoder = Encoder(
             num_layers,
