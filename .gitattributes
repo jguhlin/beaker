@@ -1,0 +1,3 @@
+precomputed/beaker_medium_tripleloss.data-00000-of-00001 filter=lfs diff=lfs merge=lfs -text
+precomputed/beaker_medium_tripleloss.index filter=lfs diff=lfs merge=lfs -text
+precomputed/weights_wide_singlelayer_k21_3Aug2020model_21_dims_32_epochs256.npy filter=lfs diff=lfs merge=lfs -text
