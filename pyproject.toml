@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "biobeaker"
+version = "0.0.1"
+description = "Coming soon"
+authors = [
+    "Joseph Guhlin <joseph.guhlin@gmail.com>"
+]
+license = "TBD"
+
+readme = "README.md"
+
+homepage = "https://github.com/jguhlin/beaker"
+repository = "https://github.com/jguhlin/beaker"
+documentation = "https://github.com/jguhlin/beaker"
+
+keywords = ["machine learning", "bioinformatics"]
+
+classifiers = [
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+# Requirements
+[tool.poetry.dependencies]
+python = "^3.6"
+tensorflow = "2.3.0"
+tensorflow-addons = "0.11.2"
+numpy = "^1.16.0"
+baseconvert = "1.0.0.a4"
