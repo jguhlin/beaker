@@ -1,11 +1,12 @@
 import tensorflow as tf
 import numpy as np
 from baseconvert import base
- 
+
 # From Tensorflow Tutorial
 def get_angles(pos, i, d_model):
     angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
     return pos * angle_rates
+
 
 # From Tensorflow Tutorial
 # positions = total number of positions for each word
@@ -35,18 +36,21 @@ def discriminator_layer(neurons, window_size, output_dims):
         ]
     )
 
+
 def calc_kmer_numeric_tuple(k, n):
     x = list(base(int(n), 10, 5))
     x = [0] * (k - len(x)) + x
     return x[:k]
 
+
 NUMERIC_TO_STRING = {
-  0: 'A',
-  1: 'T',
-  2: 'N',
-  3: 'C',
-  4: 'G',
-};
+    0: "A",
+    1: "T",
+    2: "N",
+    3: "C",
+    4: "G",
+}
+
 
 def convert_tuple_to_string(n):
     x = ""
@@ -54,15 +58,17 @@ def convert_tuple_to_string(n):
         x += NUMERIC_TO_STRING.get(i)
     return x
 
+
 def convert_tuple_to_np(k, x):
-    out = np.zeros((k,5))
+    out = np.zeros((k, 5))
     for i in range(k):
         if x[i] > 4:
-             x[i] = 0
+            x[i] = 0
         if x[i] < 0:
-             x[i] = 0
+            x[i] = 0
         out[i][x[i]] = 1
-    return np.reshape(out, (k*5))
+    return np.reshape(out, (k * 5))
+
 
 def convert_string_to_nparray(s):
     d = list()
@@ -84,17 +90,18 @@ def convert_string_to_nparray(s):
             continue
     return np.array(d)
 
+
 def convert_string_to_nparray_tuple(k, s):
-    out = np.zeros(k*5)
+    out = np.zeros(k * 5)
     for x in range(k):
         if s[x] == "A":
-            out[5*x] = 1
+            out[5 * x] = 1
         if s[x] == "T":
-            out[5*x+1] = 1
+            out[5 * x + 1] = 1
         if s[x] == "C":
-            out[5*x+3] = 1
+            out[5 * x + 3] = 1
         if s[x] == "G":
-            out[5*x+4] = 1
+            out[5 * x + 4] = 1
         if s[x] == "N":
-            out[5*x+2] = 1
+            out[5 * x + 2] = 1
     return out
