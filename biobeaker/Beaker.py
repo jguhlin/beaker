@@ -48,13 +48,13 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.dropout = tf.keras.layers.Dropout(dropout)
 
-    def call(self, x, training):
-        attn, attn_weights = self.mha([x, x], training=training)
-        out1 = self.layernorm1(x + attn)
+    def call(self, x, training=False ,mask=None):
+        attn, attn_weights = self.mha([x, x], mask=mask, training=training)
+        out1 = self.layernorm1(x + attn, training=training)
 
-        ffn_output = self.ffn(out1)
+        ffn_output = self.ffn(out1, training=training)
         ffn_output = self.dropout(ffn_output, training=training)
-        out2 = self.layernorm2(out1 + ffn_output)
+        out2 = self.layernorm2(out1 + ffn_output, training=training)
 
         return out2, attn_weights
 
@@ -102,12 +102,12 @@ class Encoder(tf.keras.layers.Layer):
 
         self.dropout = tf.keras.layers.Dropout(dropout)
 
-    def call(self, x, training):
+    def call(self, x, training=False, mask=None):
         self.pos_encoding = tf.cast(self.pos_encoding, x.dtype)
 
         seq_len = tf.shape(x)[1]
 
-        x = self.dense1(x)
+        x = self.dense1(x, training=training)
         x *= tf.math.sqrt(tf.cast(self.intermediate_dims, x.dtype))
         x = self.dropout(x, training=training)
 
@@ -120,7 +120,7 @@ class Encoder(tf.keras.layers.Layer):
         encoder_outputs = []
 
         for i in range(self.num_layers):
-            x, block = self.enc_layers[i](x, training)
+            x, block = self.enc_layers[i](x, training=training, mask=mask)
             encoder_outputs.append(x)
             attention_weights["encoder_layer{}_block".format(i + 1)] = block
 
@@ -156,7 +156,6 @@ class BEAKER(tf.keras.Model):
             activation,
         )
 
-    def call(self, inp, training):
-
-        enc_output, attention_weights, all_outputs = self.encoder(inp, training)
+    def call(self, inp, training=False, mask=None):
+        enc_output, attention_weights, all_outputs = self.encoder(inp, training, mask)
         return enc_output, attention_weights, all_outputs
