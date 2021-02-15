@@ -4,3 +4,4 @@ Dmel.sfai filter=lfs diff=lfs merge=lfs -text
 Dmel.sfasta filter=lfs diff=lfs merge=lfs -text
 Vvulg.sfai filter=lfs diff=lfs merge=lfs -text
 Vvulg.sfasta filter=lfs diff=lfs merge=lfs -text
+Dmel.gff3 filter=lfs diff=lfs merge=lfs -text
