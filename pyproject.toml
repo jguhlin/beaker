@@ -26,3 +26,6 @@ tensorflow = "2.4.1"
 tensorflow-addons = "0.12.1"
 numpy = "1.19.2"
 baseconvert = "1.0.0.a4"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.8.4"
