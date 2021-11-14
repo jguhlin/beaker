@@ -48,7 +48,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.dropout = tf.keras.layers.Dropout(dropout)
 
-    def call(self, x, training=False ,mask=None):
+    def call(self, x, training=False, mask=None):
         attn, attn_weights = self.mha([x, x], mask=mask, training=training)
         out1 = self.layernorm1(x + attn, training=training)
 
