@@ -16,7 +16,6 @@ from .utils import (
     discriminator_layer,
 )
 
-
 def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
     return tf.keras.Sequential(
         [
