@@ -1,4 +1,4 @@
-# 12 Oct model
+# 12 Oct 2020 model
 # Less layers!
 # First layer can attend to self, the rest of the layers mask the self word...
 

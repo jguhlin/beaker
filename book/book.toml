@@ -1,0 +1,16 @@
+[book]
+authors = ["Joseph Guhlin"]
+language = "en"
+multilingual = false
+src = "src"
+title = "BEAKER"
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[preprocessor.toc]
+command = "mdbook-toc"
+renderer = ["html"]
+
+[output.html]
+additional-js = ["mermaid.min.js", "mermaid-init.js"]

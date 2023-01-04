@@ -4,7 +4,7 @@
 # Support 24 amino acids
 # including X 
 ALPHABET_SIZE = 23
-k = 11
+k = 6
 dims = 16
 
 ## No more manual settings here!
@@ -206,7 +206,7 @@ def model1():
 
     magic = Dense(dims,
                   use_bias=False,
-                  activation=tf.nn.swish,
+                  #activation=tf.nn.swish,
                   name="Magic",
                   kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.005, seed=1),)
 

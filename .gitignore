@@ -124,3 +124,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/
+
+*.npy
+weights_calculation/kmer_encoder_log_dir/
+weights_calculation/experiments/
+.aim
+*.csv
+*.previous
