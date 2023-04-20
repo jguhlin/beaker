@@ -98,6 +98,7 @@ vds = (
     .prefetch(128)
 )
 
+
 def model2(opt):
     model_input = Input(shape=(2, k * 5), dtype="float32", name="kmers")
     input1_flat = model_input[:, 0, :]
@@ -127,8 +128,12 @@ def model2(opt):
     reverso_output = Dense(k * 5, name="ReversoOutput")
     reshaped = tf.keras.layers.Reshape((k, 5))
 
-    k1r = Flatten()(keras.activations.softmax(reshaped(reverso_output(reverso(k1m))), axis=2))
-    k2r = Flatten()(keras.activations.softmax(reshaped(reverso_output(reverso(k2m))), axis=2))
+    k1r = Flatten()(
+        keras.activations.softmax(reshaped(reverso_output(reverso(k1m))), axis=2)
+    )
+    k2r = Flatten()(
+        keras.activations.softmax(reshaped(reverso_output(reverso(k2m))), axis=2)
+    )
 
     model = Model(inputs=[model_input], outputs=[output, k1r, k2r])
     model.compile(loss="mse", optimizer=opt)  # tf.keras.optimizers.Nadam())
@@ -144,7 +149,7 @@ print("At first training step...")
 print(opt.lr)
 
 logcb = tf.keras.callbacks.CSVLogger(
-    "log_k_{}_dims_{}.csv".format(k,dims), separator=',', append=True
+    "log_k_{}_dims_{}.csv".format(k, dims), separator=",", append=True
 )
 
 
@@ -159,7 +164,7 @@ model.fit(
     validation_steps=32,
     verbose=1,
     shuffle=False,
-    callbacks = [logcb],
+    callbacks=[logcb],
 )
 
 weights = model.get_weights()
@@ -183,7 +188,7 @@ model.fit(
     validation_steps=32,
     verbose=1,
     shuffle=False,
-    callbacks = [logcb],
+    callbacks=[logcb],
 )
 #          callbacks=[cb])
 
@@ -206,7 +211,7 @@ model.fit(
     validation_steps=32,
     verbose=1,
     shuffle=False,
-    callbacks = [logcb],
+    callbacks=[logcb],
 )
 #          callbacks=[cb])
 

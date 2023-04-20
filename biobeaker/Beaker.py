@@ -27,7 +27,7 @@ def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
 
 class EncoderLayer(tf.keras.layers.Layer):
     def __init__(
-        self, intermediate_dims, num_heads, dropout, attention_dropout, activation
+        self, output_dims, intermediate_dims, num_heads, dropout, attention_dropout, activation
     ):
         super(EncoderLayer, self).__init__()
 
@@ -40,7 +40,7 @@ class EncoderLayer(tf.keras.layers.Layer):
             dtype=tf.float32,
         )
 
-        self.ffn = ffn(intermediate_dims, intermediate_dims, activation)
+        self.ffn = ffn(output_dims, intermediate_dims, activation)
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
@@ -90,6 +90,7 @@ class Encoder(tf.keras.layers.Layer):
 
         self.enc_layers = [
             EncoderLayer(
+                output_dims,
                 intermediate_dims,
                 num_heads,
                 dropout=dropout,
