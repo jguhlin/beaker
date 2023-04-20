@@ -56,7 +56,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(dropout)
 
     def call(self, x, training=False, mask=None):
-        if mask is None:
+        if mask is not None:
             broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
             x = x * broadcast_float_mask
 
