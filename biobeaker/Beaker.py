@@ -40,7 +40,7 @@ class EncoderLayer(tf.keras.layers.Layer):
             dtype=tf.float32,
         )
 
-        self.ffn = ffn(output_dims, intermediate_dims, activation)
+        self.ffn = ffn(intermediate_dims, intermediate_dims, activation)
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
@@ -78,6 +78,7 @@ class Encoder(tf.keras.layers.Layer):
         self.num_layers = num_layers
         self.output_dims = output_dims
         self.intermediate_dims = intermediate_dims
+        self.final_dense = Dense(output_dims)
 
         self.pos_encoding = positional_encoding(
             maximum_positions, positional_encoding_dims
@@ -122,7 +123,8 @@ class Encoder(tf.keras.layers.Layer):
         for i in range(self.num_layers):
             x, block = self.enc_layers[i](x, training=training, mask=mask)
             encoder_outputs.append(x)
-            attention_weights["encoder_layer{}_block".format(i + 1)] = block
+            attention_weights["layer_{}_attention".format(i + 1)] = block
+        x = self.final_dense(x)
 
         return x, attention_weights, encoder_outputs
 

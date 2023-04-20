@@ -10,5 +10,5 @@ from .utils import (
     convert_string_to_nparray,
     convert_tuple_to_np,
     convert_tuple_to_string,
-    # calc_kmer_numeric_tuple,
+    calc_kmer_numeric_tuple,
 )
