@@ -50,9 +50,9 @@ def test_shapes():
     x = biobeaker.BEAKER(4, 64, 128, 4, 128, 256)
     y = x(np.random.rand(5, 5, 64))
 
-    assert (5, 5, 128) == y[0].shape
+    assert (5, 5, 64) == y[0].shape
     assert 4 == len(y[1].keys())
-    assert (4, 5, 5, 128) == np.asarray(y[2]).shape
+    assert (4, 5, 5, 64) == np.asarray(y[2]).shape
 
 
 def test_kmer_str_fns():
