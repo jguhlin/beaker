@@ -8,7 +8,8 @@ from biobeaker.utils import get_angles, positional_encoding
 from biobeaker import BEAKER
 
 import tensorflow as tf
-import tensorflow_addons as tfa
+
+# import tensorflow_addons as tfa
 import numpy as np
 import time
 import pyracular
@@ -62,7 +63,7 @@ transformer = BEAKER(
     max_positions,
     dropout=dropout_rate,
     attention_dropout=dropout_rate,
-    activation=tfa.activations.gelu,
+    activation=tf.keras.activations.gelu,
 )
 
 generator = BEAKER(
@@ -74,7 +75,7 @@ generator = BEAKER(
     max_positions,
     dropout=0.15,
     attention_dropout=0.15,
-    activation=tfa.activations.gelu,
+    activation=tf.keras.activations.gelu,
 )
 
 
@@ -333,7 +334,8 @@ csvlog = tf.keras.callbacks.CSVLogger(
 
 # lr = tfa.optimizers.ExponentialCyclicalLearningRate(1e-8, 1e-4, 2048)
 lr = tf.keras.experimental.CosineDecayRestarts(1e-4, 8192 * 3)
-optimizer = tfa.optimizers.LAMB(learning_rate=lr)
+# optimizer = tfa.optimizers.LAMB(learning_rate=lr)
+optimizer = tf.keras.optimizers.AdamW(learning_rate=1e-4, weight_decay=1e-5)
 
 loss0a = tf.keras.losses.BinaryCrossentropy(from_logits=False)  # Dis0
 loss0b = tf.keras.losses.BinaryCrossentropy(from_logits=False)  # Dis1
@@ -417,7 +419,8 @@ total_epochs = 1024
 
 # Run for awhile...
 lr = tf.keras.experimental.CosineDecayRestarts(1e-4, 8192 * 2)
-optimizer = tfa.optimizers.LAMB(learning_rate=lr, weight_decay_rate=0.01)
+# optimizer = tfa.optimizers.LAMB(learning_rate=lr, weight_decay_rate=0.01)
+optimizer = tf.keras.optimizers.AdamW(1e-4, 1e-6)
 
 model.compile(
     loss=loss,
@@ -440,8 +443,9 @@ model.fit(
 
 lr = tf.keras.experimental.CosineDecayRestarts(1e-4, 8192 * 2)
 
-optimizer = tfa.optimizers.LAMB(learning_rate=lr, weight_decay_rate=0.001)
-optimizer = tfa.optimizers.Lookahead(optimizer, sync_period=10)
+# optimizer = tfa.optimizers.LAMB(learning_rate=lr, weight_decay_rate=0.001)
+# optimizer = tfa.optimizers.Lookahead(optimizer, sync_period=10)
+optimizer = tf.keras.optimizers.AdamW(1e-4, 1e-6)
 
 model.compile(
     loss=loss, loss_weights=loss_weights, optimizer=optimizer, metrics=metrics

@@ -41,7 +41,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.mha = tf.keras.layers.MultiHeadAttention(
             num_heads=num_heads,
             key_dim=intermediate_dims,
-            #output_size=intermediate_dims,
+            # output_size=intermediate_dims,
             dropout=attention_dropout,
         )
 
@@ -62,7 +62,9 @@ class EncoderLayer(tf.keras.layers.Layer):
             print(tf.shape(mask))
             print(tf.shape(x))
 
-        attn, attn_weights = self.mha(x, x, attention_mask=mask, training=training, return_attention_scores=True)
+        attn, attn_weights = self.mha(
+            x, x, attention_mask=mask, training=training, return_attention_scores=True
+        )
         out1 = self.layernorm1(x + attn, training=training)
 
         ffn_output = self.ffn(out1, training=training)

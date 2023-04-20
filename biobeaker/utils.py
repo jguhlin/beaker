@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+
 # from baseconvert import base
 
 # From Tensorflow Tutorial
@@ -53,17 +54,18 @@ def discriminator_layer(neurons, window_size, output_dims):
 def base10_to_base5(n: int) -> list:
     if n == 0:
         return [0]
-    
+
     base5_number = []
     while n > 0:
         remainder = n % 5
         n = n // 5
         base5_number.insert(0, remainder)
-    
+
     return base5_number
 
+
 def calc_kmer_numeric_tuple(k, n):
-    x = list(base10_to_base5(int(n))) #, 10, 5))
+    x = list(base10_to_base5(int(n)))  # , 10, 5))
     x = [0] * (k - len(x)) + x
     return x[:k]
 
