@@ -56,8 +56,10 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(dropout)
 
     def call(self, x, training=False, mask=None):
-        broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
-        x = x * broadcast_float_mask
+        if mask is None:
+            broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
+            x = x * broadcast_float_mask
+
         attn, attn_weights = self.mha([x, x], mask=mask, training=training)
         out1 = self.layernorm1(x + attn, training=training)
 
@@ -65,7 +67,9 @@ class EncoderLayer(tf.keras.layers.Layer):
         ffn_output = self.dropout(ffn_output, training=training)
         out2 = self.layernorm2(out1 + ffn_output, training=training)
 
-        out2 = out2 * broadcast_float_mask
+        if mask is not None:
+            out2 = out2 * broadcast_float_mask
+
         return out2, attn_weights
 
 
@@ -172,6 +176,7 @@ class BEAKER(tf.keras.Model):
 
     def call(self, inp, training=False, mask=None):
         enc_output, attention_weights, all_outputs = self.encoder(inp, training, mask)
-        broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
-        enc_output = enc_output * broadcast_float_mask
+        if mask is not None:
+            broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
+            enc_output = enc_output * broadcast_float_mask
         return enc_output, attention_weights, all_outputs

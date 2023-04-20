@@ -50,15 +50,15 @@ def discriminator_layer(neurons, window_size, output_dims):
     )
 
 
-def base10_to_base5(n: int) -> str:
+def base10_to_base5(n: int) -> list:
     if n == 0:
-        return "0"
+        return [0]
     
-    base5_number = ""
+    base5_number = []
     while n > 0:
         remainder = n % 5
         n = n // 5
-        base5_number = str(remainder) + base5_number
+        base5_number.insert(0, remainder)
     
     return base5_number
 
