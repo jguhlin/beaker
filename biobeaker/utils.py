@@ -7,12 +7,19 @@ def get_angles(pos, i, d_model):
     angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
     return pos * angle_rates
 
+
 # Originally from tensorflow tutorial
 def create_padding_mask(seq):
-  attn_mask = tf.cast(tf.math.not_equal(tf.math.reduce_sum(seq, axis=-1), 0), tf.float32)
-  loss_mask = tf.cast(tf.math.equal(tf.math.reduce_sum(seq, axis=-1), 0), tf.float32)
+    attn_mask = tf.cast(
+        tf.math.not_equal(tf.math.reduce_sum(seq, axis=-1), 0), tf.float32
+    )
+    loss_mask = tf.cast(tf.math.equal(tf.math.reduce_sum(seq, axis=-1), 0), tf.float32)
 
-  return attn_mask,loss_mask # Output 1's where attention is given, and 0's for masked parts of a sequence... this is opposite of the tutorial
+    return (
+        attn_mask,
+        loss_mask,
+    )  # Output 1's where attention is given, and 0's for masked parts of a sequence... this is opposite of the tutorial
+
 
 # From Tensorflow Tutorial
 # positions = total number of positions for each word

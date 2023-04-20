@@ -16,6 +16,7 @@ from .utils import (
     discriminator_layer,
 )
 
+
 def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
     return tf.keras.Sequential(
         [
@@ -27,7 +28,13 @@ def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
 
 class EncoderLayer(tf.keras.layers.Layer):
     def __init__(
-        self, output_dims, intermediate_dims, num_heads, dropout, attention_dropout, activation
+        self,
+        output_dims,
+        intermediate_dims,
+        num_heads,
+        dropout,
+        attention_dropout,
+        activation,
     ):
         super(EncoderLayer, self).__init__()
         self.supports_masking = True

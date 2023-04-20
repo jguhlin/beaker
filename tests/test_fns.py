@@ -78,6 +78,7 @@ def test_kmer_str_fns():
     assert (105,) == y.shape
     assert 21.0 == np.sum(y)
 
+
 def test_beaker_masking():
     num_layers = 2
     embedding_dims = 64
@@ -98,20 +99,23 @@ def test_beaker_masking():
         max_positions=max_positions,
         dropout=dropout,
         attention_dropout=attention_dropout,
-        positional_encoding_dims=positional_encoding_dims
+        positional_encoding_dims=positional_encoding_dims,
     )
 
     input_data = np.random.rand(1, 10, embedding_dims).astype(np.float32)
     input_data[0, 4:] = 0.0
     input_data = tf.constant(input_data)
-    
+
     mask = np.ones((1, 10), dtype=np.bool)
     mask[0, 4:] = False
     mask = tf.constant(mask)
 
     enc_output, attention_weights, all_outputs = beaker(input_data, mask=mask)
 
-    assert np.allclose(enc_output.numpy()[:, 4:], 0.0), "Masking failed: output does not contain zeros where expected."
+    assert np.allclose(
+        enc_output.numpy()[:, 4:], 0.0
+    ), "Masking failed: output does not contain zeros where expected."
+
 
 @pytest.mark.parametrize("mask_value", [0.0, 1.0])
 def test_beaker_masking_with_mask_value(mask_value):
@@ -134,7 +138,7 @@ def test_beaker_masking_with_mask_value(mask_value):
         max_positions=max_positions,
         dropout=dropout,
         attention_dropout=attention_dropout,
-        positional_encoding_dims=positional_encoding_dims
+        positional_encoding_dims=positional_encoding_dims,
     )
 
     input_data = np.random.rand(1, 10, embedding_dims).astype(np.float32)
@@ -147,4 +151,6 @@ def test_beaker_masking_with_mask_value(mask_value):
 
     enc_output, attention_weights, all_outputs = beaker(input_data, mask=mask)
 
-    assert np.allclose(enc_output.numpy()[:, 4:], 0.0), f"Masking failed with mask_value {mask_value}: output does not contain zeros where expected."
+    assert np.allclose(
+        enc_output.numpy()[:, 4:], 0.0
+    ), f"Masking failed with mask_value {mask_value}: output does not contain zeros where expected."

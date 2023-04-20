@@ -77,6 +77,7 @@ generator = BEAKER(
     activation=tfa.activations.gelu,
 )
 
+
 def matched_layer():
     return tf.keras.Sequential(
         [
@@ -180,11 +181,12 @@ print(tf.shape(b_score))
 gen_loss_a = tf.math.reduce_sum(tf.math.square(a_score), axis=-1)
 gen_loss_b = tf.math.reduce_sum(tf.math.square(b_score), axis=-1)
 
-#gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
-#gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
+# gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
+# gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
 
 model = Model(
-    inputs=[batch_input, truth1, truth2], outputs=[out0a, out0b, out1, out2, gen_loss_a, gen_loss_b]
+    inputs=[batch_input, truth1, truth2],
+    outputs=[out0a, out0b, out1, out2, gen_loss_a, gen_loss_b],
 )
 
 # Load up the weights

@@ -107,20 +107,24 @@ def discriminator_layer(neurons, activation="relu"):
         name="Discriminator",
     )
 
+
 def reverso_layer():
     return tf.keras.Sequential(
         [
             tf.keras.layers.Dense(
                 k * 5 * 3 * 32, use_bias=False, activation=tf.nn.swish, name="Reverso0"
             ),
-            tf.keras.layers.Dense(k * 5 * 3 * 8, use_bias=False, activation="relu", name="Reverso1"),
+            tf.keras.layers.Dense(
+                k * 5 * 3 * 8, use_bias=False, activation="relu", name="Reverso1"
+            ),
             tf.keras.layers.Dense(k * 5, name="ReversoOutput"),
             tf.keras.layers.Reshape((window_size, k, 5)),
             tf.keras.layers.Softmax(axis=-1),
-            tf.keras.layers.Reshape((window_size, k*5))
+            tf.keras.layers.Reshape((window_size, k * 5)),
         ],
-        name="Reverso"
+        name="Reverso",
     )
+
 
 magic = Dense(
     embedding_dims,
@@ -141,9 +145,7 @@ batch_input = Input(
     shape=(2, window_size + 1, k * 5), dtype="float32", name="BatchInput"
 )
 
-mask = Input(
-    shape=(2, window_size), dtype="float32", name="Mask"
-)
+mask = Input(shape=(2, window_size), dtype="float32", name="Mask")
 
 contexts_a = magic(batch_input[:, 0])
 contexts_b = magic(batch_input[:, 1])
@@ -180,15 +182,15 @@ out0b = tf.squeeze(Discriminator(DropDiscriminator(enc_outputs_b[:, 1:])), name=
 
 Reverso = reverso_layer()
 
-generator1_reversed = Reverso(generated_a[:, 1:]) #* mask[:, 0]
-generator2_reversed = Reverso(generated_b[:, 1:]) #* mask[:, 1]
+generator1_reversed = Reverso(generated_a[:, 1:])  # * mask[:, 0]
+generator2_reversed = Reverso(generated_b[:, 1:])  # * mask[:, 1]
 
-#gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
-#gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
+# gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
+# gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
 
 model = Model(
-    inputs=[batch_input, mask], 
-    outputs=[out0a, out0b, out1, out2, generator1_reversed, generator2_reversed]
+    inputs=[batch_input, mask],
+    outputs=[out0a, out0b, out1, out2, generator1_reversed, generator2_reversed],
 )
 
 # Load up the weights
@@ -200,6 +202,7 @@ magic.set_weights([weights[0][0]])
 
 # Define the generators
 cls = np.asarray([[1] * 105])
+
 
 def valid_gen():
     fasta = pyracular.TripleLossKmersGenerator(
@@ -223,7 +226,9 @@ def valid_gen():
         yield kmers, (i.truth1, i.truth2, i.matched, i.reversecomplement, 0, 0)
     print("=================Finished Training generator=================")
 
+
 fakemask = np.ones((2, window_size))
+
 
 def gen():
     fasta = pyracular.TripleLossKmersGenerator(
@@ -249,12 +254,20 @@ def gen():
         # kmers.extend([np.concatenate([cls, i.kmers3]).tolist()])
         # kmers.extend([np.concatenate([cls, i.kmers4]).tolist()])
 
-        yield (kmers, fakemask), (i.truth1, i.truth2, i.matched, i.reversecomplement, i.kmers3, i.kmers4)
+        yield (kmers, fakemask), (
+            i.truth1,
+            i.truth2,
+            i.matched,
+            i.reversecomplement,
+            i.kmers3,
+            i.kmers4,
+        )
     print("=================Finished Training generator=================")
 
 
 output_sig = (
-    (tf.TensorSpec(shape=(2, window_size + 1, k * 5), dtype=tf.int16),
+    (
+        tf.TensorSpec(shape=(2, window_size + 1, k * 5), dtype=tf.int16),
         tf.TensorSpec(shape=(2, window_size), dtype=tf.int16),
         # tf.TensorSpec(shape=window_size, dtype=tf.int16),
     ),
@@ -375,7 +388,7 @@ metrics = [
         tf.keras.metrics.TruePositives(),
         tf.keras.metrics.FalseNegatives(),
         tf.keras.metrics.FalsePositives(),
-    ]
+    ],
 ]
 
 model.compile(

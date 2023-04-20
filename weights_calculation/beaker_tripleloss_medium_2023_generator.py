@@ -50,7 +50,9 @@ beaker_output_dims = 64
 intermediate_dims = 256
 num_heads = 8
 dropout_rate = 0.15
-max_positions = 33 # Formerly 512, need to set it back but need masking all the way thru!
+max_positions = (
+    33  # Formerly 512, need to set it back but need masking all the way thru!
+)
 batch_size = 64
 
 transformer = BEAKER(
@@ -68,7 +70,7 @@ transformer = BEAKER(
 generator = BEAKER(
     8,
     embedding_dims,
-    embedding_dims, # To match the same as the 'magic' embeddings
+    embedding_dims,  # To match the same as the 'magic' embeddings
     8,
     128,
     max_positions,
@@ -81,8 +83,8 @@ generator = BEAKER(
 def matched_layer():
     return tf.keras.Sequential(
         [
-            #tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(128)),
-            #tf.keras.layers.Flatten(),
+            # tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(128)),
+            # tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(256, activation="relu"),
             tf.keras.layers.Dense(1, activation="sigmoid"),
         ],
@@ -109,20 +111,24 @@ def discriminator_layer(neurons, activation="relu"):
         name="Discriminator",
     )
 
+
 def reverso_layer():
     return tf.keras.Sequential(
         [
             tf.keras.layers.Dense(
                 k * 5 * 3 * 12, use_bias=False, activation=tf.nn.relu, name="Reverso0"
             ),
-            tf.keras.layers.Dense(k * 5 * 8, use_bias=False, activation="linear", name="Reverso1"),
+            tf.keras.layers.Dense(
+                k * 5 * 8, use_bias=False, activation="linear", name="Reverso1"
+            ),
             tf.keras.layers.Dense(k * 5, name="ReversoOutput"),
             tf.keras.layers.Reshape((window_size, k, 5)),
             tf.keras.layers.Softmax(axis=-1),
             # tf.keras.layers.Reshape((window_size, k*5))
         ],
-        name="Reverso"
+        name="Reverso",
     )
+
 
 magic = Dense(
     embedding_dims,
@@ -143,9 +149,7 @@ batch_input = Input(
     shape=(2, window_size + 1, k * 5), dtype="float32", name="BatchInput"
 )
 
-mask = Input(
-    shape=(2, window_size), dtype="float32", name="Mask"
-)
+mask = Input(shape=(2, window_size), dtype="float32", name="Mask")
 
 contexts_a = magic(batch_input[:, 0])
 contexts_b = magic(batch_input[:, 1])
@@ -157,8 +161,8 @@ generated_a = generated_a
 generated_b = generated_b
 
 Reverso = reverso_layer()
-generator1_reversed = Reverso(generated_a[:, 1:]) #* mask[:, 0]
-generator2_reversed = Reverso(generated_b[:, 1:]) #* mask[:, 1]
+generator1_reversed = Reverso(generated_a[:, 1:])  # * mask[:, 0]
+generator2_reversed = Reverso(generated_b[:, 1:])  # * mask[:, 1]
 
 Reshape105 = tf.keras.layers.Reshape((window_size, k * 5))
 
@@ -181,24 +185,24 @@ DropRc = Dropout(dropout_rate)
 Discriminator = discriminator_layer(512)
 DropDiscriminator = Dropout(dropout_rate)
 
-#CosSim = tf.keras.layers.Dot(axes=-1, normalize=True)
-#CosSimNoise = tf.keras.layers.GaussianNoise(0.05)
+# CosSim = tf.keras.layers.Dot(axes=-1, normalize=True)
+# CosSimNoise = tf.keras.layers.GaussianNoise(0.05)
 
 # TODO: I think this is only looking at the CLS token...
 # out1 = Matched(DropMatched(tf.concat([enc_outputs_b[:, 0], enc_outputs_a[:, 0]], axis=-1)))
-#out1 = Matched(CosSimNoise(CosSim([enc_outputs_a[:, 0], enc_outputs_b[:, 0]])))
+# out1 = Matched(CosSimNoise(CosSim([enc_outputs_a[:, 0], enc_outputs_b[:, 0]])))
 out1 = Matched(tf.concat([enc_outputs_a[:, 0], enc_outputs_b[:, 0]], axis=-1))
 out2 = Rc(DropRc(tf.concat([out1, enc_outputs_b[:, 0], enc_outputs_a[:, 0]], axis=-1)))
 
 out0a = tf.squeeze(Discriminator(DropDiscriminator(enc_outputs_a[:, 1:])), name="Dis0")
 out0b = tf.squeeze(Discriminator(DropDiscriminator(enc_outputs_b[:, 1:])), name="Dis1")
 
-#gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
-#gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
+# gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
+# gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
 
 model = Model(
-    inputs=[batch_input, mask], 
-    outputs=[out0a, out0b, out1, out2, generator1_reversed, generator2_reversed]
+    inputs=[batch_input, mask],
+    outputs=[out0a, out0b, out1, out2, generator1_reversed, generator2_reversed],
 )
 
 # Load up the weights
@@ -210,6 +214,7 @@ magic.set_weights([weights[0][0]])
 
 # Define the generators
 cls = np.asarray([[1] * 105])
+
 
 def valid_gen():
     fasta = pyracular.TripleLossKmersGenerator(
@@ -233,7 +238,9 @@ def valid_gen():
         yield kmers, (i.truth1, i.truth2, i.matched, i.reversecomplement, 0, 0)
     print("=================Finished Training generator=================")
 
+
 fakemask = np.ones((2, window_size))
+
 
 def gen():
     fasta = pyracular.TripleLossKmersGenerator(
@@ -262,12 +269,20 @@ def gen():
         kmers3 = np.reshape(i.kmers3, (window_size, k, 5))
         kmers4 = np.reshape(i.kmers4, (window_size, k, 5))
 
-        yield (kmers, fakemask), (i.truth1, i.truth2, i.matched, i.reversecomplement, kmers3, kmers4)
+        yield (kmers, fakemask), (
+            i.truth1,
+            i.truth2,
+            i.matched,
+            i.reversecomplement,
+            kmers3,
+            kmers4,
+        )
     print("=================Finished Training generator=================")
 
 
 output_sig = (
-    (tf.TensorSpec(shape=(2, window_size + 1, k * 5), dtype=tf.int16),
+    (
+        tf.TensorSpec(shape=(2, window_size + 1, k * 5), dtype=tf.int16),
         tf.TensorSpec(shape=(2, window_size), dtype=tf.int16),
         # tf.TensorSpec(shape=window_size, dtype=tf.int16),
     ),
@@ -333,7 +348,7 @@ csvlog = tf.keras.callbacks.CSVLogger(
 
 # lr = tfa.optimizers.ExponentialCyclicalLearningRate(1e-8, 1e-4, 2048)
 lr = tf.keras.experimental.CosineDecayRestarts(5e-5, 8192 * 3)
-#optimizer = tfa.optimizers.LAMB(learning_rate=2e-5)
+# optimizer = tfa.optimizers.LAMB(learning_rate=2e-5)
 optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5)
 
 loss0a = tf.keras.losses.BinaryCrossentropy(from_logits=False)  # Dis0
@@ -345,7 +360,7 @@ loss3b = tf.keras.losses.CategoricalCrossentropy(from_logits=False)  # Gen2
 
 
 loss = [loss0a, loss0b, loss1, loss2, loss3a, loss3b]
-loss_weights=[1.0, 1.0, 1.0, 1.0, 2.0, 2.0]
+loss_weights = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0]
 
 metrics = [
     [
@@ -389,7 +404,7 @@ metrics = [
         tf.keras.metrics.TruePositives(),
         tf.keras.metrics.FalseNegatives(),
         tf.keras.metrics.FalsePositives(),
-    ]
+    ],
 ]
 
 model.compile(
