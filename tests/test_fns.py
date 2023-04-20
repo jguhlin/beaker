@@ -34,7 +34,7 @@ def test_shapes():
     y = x(np.random.rand(5, 1024))
     assert (5, 32) == y.shape
 
-    x = biobeaker.EncoderLayer(32, 2, 0.10, 0.10, tf.nn.swish)
+    x = biobeaker.EncoderLayer(32, 32, 2, 0.10, 0.10, tf.nn.swish)
     y = x(np.random.rand(5, 32))
 
     assert (5, 32) == y[0].shape
@@ -107,7 +107,7 @@ def test_beaker_masking():
     input_data[0, 4:] = 0.0
     input_data = tf.constant(input_data)
 
-    mask = np.ones((1, 10), dtype=np.bool)
+    mask = np.ones((1, 10), dtype=bool)
     mask[0, 4:] = False
     mask = tf.constant(mask)
 
@@ -146,7 +146,7 @@ def test_beaker_masking_with_mask_value(mask_value):
     input_data[0, 4:] = mask_value
     input_data = tf.constant(input_data)
 
-    mask = np.ones((1, 10), dtype=np.bool)
+    mask = np.ones((1, 10), dtype=bool)
     mask[0, 4:] = False
     mask = tf.constant(mask)
 

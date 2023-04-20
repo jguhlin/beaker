@@ -63,7 +63,7 @@ def base10_to_base5(n: int) -> str:
     return base5_number
 
 def calc_kmer_numeric_tuple(k, n):
-    x = list(base10_to_base5(int(n), 10, 5))
+    x = list(base10_to_base5(int(n))) #, 10, 5))
     x = [0] * (k - len(x)) + x
     return x[:k]
 
