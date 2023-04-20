@@ -48,7 +48,7 @@ class EncoderLayer(tf.keras.layers.Layer):
             dtype=tf.float32,
         )
 
-        self.ffn = ffn(output_dims, intermediate_dims, activation)
+        self.ffn = ffn(intermediate_dims, intermediate_dims, activation)
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
