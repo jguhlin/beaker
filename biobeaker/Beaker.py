@@ -30,6 +30,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         self, output_dims, intermediate_dims, num_heads, dropout, attention_dropout, activation
     ):
         super(EncoderLayer, self).__init__()
+        self.supports_masking = True
 
         self.mha = tfa.layers.MultiHeadAttention(
             head_size=intermediate_dims,
@@ -48,6 +49,8 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(dropout)
 
     def call(self, x, training=False, mask=None):
+        broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
+        x = x * broadcast_float_mask
         attn, attn_weights = self.mha([x, x], mask=mask, training=training)
         out1 = self.layernorm1(x + attn, training=training)
 
@@ -55,6 +58,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         ffn_output = self.dropout(ffn_output, training=training)
         out2 = self.layernorm2(out1 + ffn_output, training=training)
 
+        out2 = out2 * broadcast_float_mask
         return out2, attn_weights
 
 
@@ -74,10 +78,12 @@ class Encoder(tf.keras.layers.Layer):
     ):
         super(Encoder, self).__init__()
 
+        self.supports_masking = True
         self.embedding_dims = embedding_dims
         self.num_layers = num_layers
         self.output_dims = output_dims
         self.intermediate_dims = intermediate_dims
+        self.final_dense = Dense(output_dims)
 
         self.pos_encoding = positional_encoding(
             maximum_positions, positional_encoding_dims
@@ -122,7 +128,8 @@ class Encoder(tf.keras.layers.Layer):
         for i in range(self.num_layers):
             x, block = self.enc_layers[i](x, training=training, mask=mask)
             encoder_outputs.append(x)
-            attention_weights["encoder_layer{}_block".format(i + 1)] = block
+            attention_weights["layer_{}_attention".format(i + 1)] = block
+        x = self.final_dense(x)
 
         return x, attention_weights, encoder_outputs
 
@@ -158,4 +165,6 @@ class BEAKER(tf.keras.Model):
 
     def call(self, inp, training=False, mask=None):
         enc_output, attention_weights, all_outputs = self.encoder(inp, training, mask)
+        broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
+        enc_output = enc_output * broadcast_float_mask
         return enc_output, attention_weights, all_outputs
