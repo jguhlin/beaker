@@ -11,6 +11,7 @@ from biobeaker.utils import (
     convert_string_to_nparray,
     convert_string_to_nparray_tuple,
 )
+from biobeaker import BEAKER
 
 
 def test_get_angles():
@@ -76,3 +77,74 @@ def test_kmer_str_fns():
 
     assert (105,) == y.shape
     assert 21.0 == np.sum(y)
+
+def test_beaker_masking():
+    num_layers = 2
+    embedding_dims = 64
+    output_dims = 32
+    num_heads = 8
+    intermediate_dims = 64
+    max_positions = 256
+    dropout = 0.1
+    attention_dropout = 0.1
+    positional_encoding_dims = 16
+
+    beaker = BEAKER(
+        num_layers=num_layers,
+        embedding_dims=embedding_dims,
+        output_dims=output_dims,
+        num_heads=num_heads,
+        intermediate_dims=intermediate_dims,
+        max_positions=max_positions,
+        dropout=dropout,
+        attention_dropout=attention_dropout,
+        positional_encoding_dims=positional_encoding_dims
+    )
+
+    input_data = np.random.rand(1, 10, embedding_dims).astype(np.float32)
+    input_data[0, 4:] = 0.0
+    input_data = tf.constant(input_data)
+    
+    mask = np.ones((1, 10), dtype=np.bool)
+    mask[0, 4:] = False
+    mask = tf.constant(mask)
+
+    enc_output, attention_weights, all_outputs = beaker(input_data, mask=mask)
+
+    assert np.allclose(enc_output.numpy()[:, 4:], 0.0), "Masking failed: output does not contain zeros where expected."
+
+@pytest.mark.parametrize("mask_value", [0.0, 1.0])
+def test_beaker_masking_with_mask_value(mask_value):
+    num_layers = 2
+    embedding_dims = 64
+    output_dims = 32
+    num_heads = 8
+    intermediate_dims = 64
+    max_positions = 256
+    dropout = 0.1
+    attention_dropout = 0.1
+    positional_encoding_dims = 16
+
+    beaker = BEAKER(
+        num_layers=num_layers,
+        embedding_dims=embedding_dims,
+        output_dims=output_dims,
+        num_heads=num_heads,
+        intermediate_dims=intermediate_dims,
+        max_positions=max_positions,
+        dropout=dropout,
+        attention_dropout=attention_dropout,
+        positional_encoding_dims=positional_encoding_dims
+    )
+
+    input_data = np.random.rand(1, 10, embedding_dims).astype(np.float32)
+    input_data[0, 4:] = mask_value
+    input_data = tf.constant(input_data)
+
+    mask = np.ones((1, 10), dtype=np.bool)
+    mask[0, 4:] = False
+    mask = tf.constant(mask)
+
+    enc_output, attention_weights, all_outputs = beaker(input_data, mask=mask)
+
+    assert np.allclose(enc_output.numpy()[:, 4:], 0.0), f"Masking failed with mask_value {mask_value}: output does not contain zeros where expected."
