@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_addons as tfa
 from tensorflow.keras.layers import (
     Dense,
     Flatten,
@@ -39,13 +38,11 @@ class EncoderLayer(tf.keras.layers.Layer):
         super(EncoderLayer, self).__init__()
         self.supports_masking = True
 
-        self.mha = tfa.layers.MultiHeadAttention(
-            head_size=intermediate_dims,
+        self.mha = tf.keras.layers.MultiHeadAttention(
             num_heads=num_heads,
-            output_size=intermediate_dims,
+            key_dim=intermediate_dims,
+            #output_size=intermediate_dims,
             dropout=attention_dropout,
-            return_attn_coef=True,
-            dtype=tf.float32,
         )
 
         self.ffn = ffn(intermediate_dims, intermediate_dims, activation)
@@ -60,7 +57,12 @@ class EncoderLayer(tf.keras.layers.Layer):
             broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
             x = x * broadcast_float_mask
 
-        attn, attn_weights = self.mha([x, x], mask=mask, training=training)
+        if mask is not None:
+            print("Masking")
+            print(tf.shape(mask))
+            print(tf.shape(x))
+
+        attn, attn_weights = self.mha(x, x, attention_mask=mask, training=training, return_attention_scores=True)
         out1 = self.layernorm1(x + attn, training=training)
 
         ffn_output = self.ffn(out1, training=training)

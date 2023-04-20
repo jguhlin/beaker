@@ -35,24 +35,24 @@ def test_shapes():
     assert (5, 32) == y.shape
 
     x = biobeaker.EncoderLayer(32, 32, 2, 0.10, 0.10, tf.nn.swish)
-    y = x(np.random.rand(5, 32))
+    y = x(np.random.rand(1, 5, 32))
 
-    assert (5, 32) == y[0].shape
-    assert (2, 5, 5) == y[1].shape
+    assert (1, 5, 32) == y[0].shape
+    assert (1, 2, 5, 5) == y[1].shape
 
     x = biobeaker.Encoder(2, 64, 128, 2, 64)
     y = x(np.random.rand(5, 5, 64))
 
-    assert (5, 5, 64) == y[0].shape
+    assert (5, 5, 128) == y[0].shape
     assert 2 == len(y[1].keys())
     assert 2 == len(y[2])
 
     x = biobeaker.BEAKER(4, 64, 128, 4, 128, 256)
     y = x(np.random.rand(5, 5, 64))
 
-    assert (5, 5, 64) == y[0].shape
+    assert (5, 5, 128) == y[0].shape
     assert 4 == len(y[1].keys())
-    assert (4, 5, 5, 64) == np.asarray(y[2]).shape
+    assert (4, 5, 5, 128) == np.asarray(y[2]).shape
 
 
 def test_kmer_str_fns():
