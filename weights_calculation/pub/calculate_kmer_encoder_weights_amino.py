@@ -4,7 +4,7 @@ import sys
 # Number of dimensions we are encoding the vector as
 k = int(sys.argv[1])
 dims = int(sys.argv[2])
-batch_size = 1024
+batch_size = 512
 
 ## No more manual settings here!
 kmer_space = 23**k
@@ -13,7 +13,6 @@ kmer_space = 23**k
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-import tensorflow_addons as tfa
 from tensorflow.keras.layers import (
     Dense,
     Embedding,
@@ -56,7 +55,11 @@ def gen():
         data = kg.generate_pairs()
         for i in data:
             (k1a, k2a, score) = i
-            yield (k1a, k2a), (score, k1a, k2a)
+            yield (k1a, k2a), (
+                score,
+                np.reshape(k1a, (k, 23)),
+                np.reshape(k2a, (k, 23)),
+            )
 
 
 def vgen():
@@ -65,7 +68,11 @@ def vgen():
         for i in vdata:
             # (k1a, k2a, k1, k2, score, target_score) = i
             (k1a, k2a, score) = i
-            yield (k1a, k2a), (score, k1a, k2a)
+            yield (k1a, k2a), (
+                score,
+                np.reshape(k1a, (k, 23)),
+                np.reshape(k2a, (k, 23)),
+            )
 
 
 ds = (
@@ -75,8 +82,8 @@ ds = (
             tf.TensorSpec(shape=(2, k * 23), dtype=tf.int32),
             (
                 tf.TensorSpec(shape=(), dtype=tf.int32),
-                tf.TensorSpec(shape=(k * 23), dtype=tf.int32),
-                tf.TensorSpec(shape=(k * 23), dtype=tf.int32),
+                tf.TensorSpec(shape=(k, 23), dtype=tf.int32),
+                tf.TensorSpec(shape=(k, 23), dtype=tf.int32),
             ),
         ),
     )
@@ -91,8 +98,8 @@ vds = (
             tf.TensorSpec(shape=(2, k * 23), dtype=tf.int32),
             (
                 tf.TensorSpec(shape=(), dtype=tf.int32),
-                tf.TensorSpec(shape=(k * 23), dtype=tf.int32),
-                tf.TensorSpec(shape=(k * 23), dtype=tf.int32),
+                tf.TensorSpec(shape=(k, 23), dtype=tf.int32),
+                tf.TensorSpec(shape=(k, 23), dtype=tf.int32),
             ),
         ),
     )
@@ -130,19 +137,31 @@ def model2(opt):
     reverso_output = Dense(k * 23, name="ReversoOutput")
     reshaped = tf.keras.layers.Reshape((k, 23))
 
-    k1r = Flatten()(
-        keras.activations.softmax(reshaped(reverso_output(reverso(k1m))), axis=2)
-    )
-    k2r = Flatten()(
-        keras.activations.softmax(reshaped(reverso_output(reverso(k2m))), axis=2)
-    )
+    k1r = reshaped(reverso_output(reverso(k1m)))
+    k2r = reshaped(reverso_output(reverso(k2m)))
 
     model = Model(inputs=[model_input], outputs=[output, k1r, k2r])
-    model.compile(loss="mse", optimizer=opt)  # tf.keras.optimizers.Nadam())
+    metrics = [
+        [],
+        [tf.keras.metrics.CategoricalAccuracy()],
+        [tf.keras.metrics.CategoricalAccuracy()],
+    ]
+    loss_weights = [1, 0.5, 0.5]
+    model.compile(
+        loss=[
+            "msle",
+            tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+            tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        ],
+        optimizer=opt,
+        metrics=metrics,
+        loss_weights=loss_weights,
+    )
     return model
 
 
-opt = tf.keras.optimizers.Nadam()
+# opt = tf.keras.optimizers.Nadam()
+opt = tf.keras.optimizers.AdamW(learning_rate=1e-3, weight_decay=1e-2)
 
 model = model2(opt)
 print(model.summary())
@@ -162,8 +181,8 @@ model.fit(
     initial_epoch=cur_epoch,
     validation_data=vds,
     epochs=cur_epoch + epochs,
-    steps_per_epoch=256,
-    validation_steps=32,
+    steps_per_epoch=2048,
+    validation_steps=128,
     verbose=1,
     shuffle=False,
     callbacks=[logcb],

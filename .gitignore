@@ -131,3 +131,6 @@ weights_calculation/experiments/
 .aim
 *.csv
 *.previous
+checkpoint/
+weights/
+beaker_medium_nt_triple2023_generator/

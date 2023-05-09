@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_addons as tfa
 from tensorflow.keras.layers import (
     Dense,
     Flatten,
@@ -16,6 +15,7 @@ from .utils import (
     discriminator_layer,
 )
 
+
 def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
     return tf.keras.Sequential(
         [
@@ -27,38 +27,51 @@ def ffn(output_dims, intermediate_dims, activation=tf.nn.swish):
 
 class EncoderLayer(tf.keras.layers.Layer):
     def __init__(
-        self, output_dims, intermediate_dims, num_heads, dropout, attention_dropout, activation
+        self,
+        output_dims,
+        intermediate_dims,
+        num_heads,
+        dropout,
+        attention_dropout,
+        activation,
     ):
         super(EncoderLayer, self).__init__()
         self.supports_masking = True
 
-        self.mha = tfa.layers.MultiHeadAttention(
-            head_size=intermediate_dims,
+        self.mha = tf.keras.layers.MultiHeadAttention(
             num_heads=num_heads,
-            output_size=intermediate_dims,
+            key_dim=intermediate_dims,
             dropout=attention_dropout,
-            return_attn_coef=True,
-            dtype=tf.float32,
         )
 
-        self.ffn = ffn(intermediate_dims, intermediate_dims, activation)
+        self.ffn  = ffn(intermediate_dims, intermediate_dims, activation)
+        self.ffn2 = ffn(intermediate_dims, intermediate_dims, activation)
 
-        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm1 = tf.keras.layers.LayerNormalization()
+        self.layernorm2 = tf.keras.layers.LayerNormalization()
 
         self.dropout = tf.keras.layers.Dropout(dropout)
 
     def call(self, x, training=False, mask=None):
-        broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
-        x = x * broadcast_float_mask
-        attn, attn_weights = self.mha([x, x], mask=mask, training=training)
+        if mask is not None:
+            broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
+            x = x * broadcast_float_mask
+            mask = tf.reshape(mask, (tf.shape(mask)[0], 1, tf.shape(mask)[-1]))
+
+        attn, attn_weights = self.mha(
+            query=x, value=x, key=x, attention_mask=mask, training=training, return_attention_scores=True
+        )
         out1 = self.layernorm1(x + attn, training=training)
 
         ffn_output = self.ffn(out1, training=training)
-        ffn_output = self.dropout(ffn_output, training=training)
-        out2 = self.layernorm2(out1 + ffn_output, training=training)
+        ffn_output = self.ffn2(ffn_output, training=training)
+        # ffn_output = self.dropout(ffn_output, training=training)
+        
+        out2 = self.layernorm2(ffn_output, training=training)
 
-        out2 = out2 * broadcast_float_mask
+        if mask is not None:
+            out2 = out2 * broadcast_float_mask
+
         return out2, attn_weights
 
 
@@ -89,10 +102,11 @@ class Encoder(tf.keras.layers.Layer):
             maximum_positions, positional_encoding_dims
         )
 
-        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm1 = tf.keras.layers.LayerNormalization()
+        self.layernorm2 = tf.keras.layers.LayerNormalization()
 
-        self.dense1 = Dense(intermediate_dims - positional_encoding_dims)
+        self.dense1 = Dense(intermediate_dims, activation=activation)
+        self.dense2 = Dense(intermediate_dims - positional_encoding_dims)
 
         self.enc_layers = [
             EncoderLayer(
@@ -113,9 +127,9 @@ class Encoder(tf.keras.layers.Layer):
 
         seq_len = tf.shape(x)[1]
 
-        x = self.dense1(x, training=training)
-        x *= tf.math.sqrt(tf.cast(self.intermediate_dims, x.dtype))
-        x = self.dropout(x, training=training)
+        x = self.dense2(self.dense1(x, training=training), training=training)
+        # x *= tf.math.sqrt(tf.cast(self.intermediate_dims, x.dtype))
+        # x = self.dropout(x, training=training)
 
         # Instead of adding the positional encodings, we just concat them the the embeddings
         # It's worked better in my earlier trials, so I switched early on to this method.
@@ -165,6 +179,7 @@ class BEAKER(tf.keras.Model):
 
     def call(self, inp, training=False, mask=None):
         enc_output, attention_weights, all_outputs = self.encoder(inp, training, mask)
-        broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
-        enc_output = enc_output * broadcast_float_mask
+        if mask is not None:
+            broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
+            enc_output = enc_output * broadcast_float_mask
         return enc_output, attention_weights, all_outputs
