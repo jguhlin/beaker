@@ -143,6 +143,7 @@ reverso_layer.add(reshaped)
 
 reverso.trainable = False
 
+
 magic = Dense(
     embedding_dims,
     activation="linear",
@@ -254,6 +255,11 @@ out2 = Rc(tf.concat([enc_outputs_b[:, 0], enc_outputs_a[:, 0]], axis=-1))
 out0a = tf.squeeze(Discriminator(conv1d(enc_outputs_a[:, 1:])), name="Dis0")
 out0b = tf.squeeze(Discriminator(conv1d(enc_outputs_b[:, 1:])), name="Dis1")
 
+Reverso = reverso_layer()
+
+generator1_reversed = Reverso(generated_a[:, 1:])  # * mask[:, 0]
+generator2_reversed = Reverso(generated_b[:, 1:])  # * mask[:, 1]
+
 # gen_loss_a = tf.math.reduce_sum(tf.math.square(generated_a - contexts_a_true), axis=-1)
 # gen_loss_b = tf.math.reduce_sum(tf.math.square(generated_b - contexts_b_true), axis=-1)
 
@@ -283,6 +289,7 @@ reverso_layer.load_weights(
 
 # Define the generators
 # cls = np.asarray([[1] * 105])
+
 
 
 def valid_gen():
@@ -427,7 +434,6 @@ csvlog = tf.keras.callbacks.CSVLogger(
 # lr = tfa.optimizers.ExponentialCyclicalLearningRate(1e-8, 1e-4, 2048)
 lr = tf.keras.experimental.CosineDecayRestarts(1e-4, 8192 * 3)
 # optimizer = tfa.optimizers.LAMB(learning_rate=lr)
-
 
 # Copied from
 # https://github.com/tensorflow/models/blob/v2.12.0/official/modeling/optimization/lr_schedule.py#L92-L162

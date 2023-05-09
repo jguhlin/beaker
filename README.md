@@ -9,3 +9,11 @@ More info coming soon
 # Code Format
 We use python black code formatter for this repo.
 
+# Changelog
+
+## 21 Apr 2023
+- Masking now works and tests for masking implemented (and pass)
+- Removed tensorflow addons as a dependency (tfa MHA to tf MHA)
+- Removed baseconvert as a dependency
+- Switched default optimizer to AdamW from LAMB
+- poetry update
