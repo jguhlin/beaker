@@ -50,7 +50,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.layernorm1 = tf.keras.layers.LayerNormalization()
         self.layernorm2 = tf.keras.layers.LayerNormalization()
 
-        self.dropout = tf.keras.layers.Dropout(dropout)
+        #self.dropout = tf.keras.layers.Dropout(dropout)
 
     def call(self, x, training=False, mask=None):
         if mask is not None:
@@ -58,21 +58,24 @@ class EncoderLayer(tf.keras.layers.Layer):
             x = x * broadcast_float_mask
             mask = tf.reshape(mask, (tf.shape(mask)[0], 1, tf.shape(mask)[-1]))
 
-        attn, attn_weights = self.mha(
-            query=x, value=x, key=x, attention_mask=mask, training=training, return_attention_scores=True
-        )
-        out1 = self.layernorm1(x + attn, training=training)
+        out1 = self.layernorm1(x, training=training)
+        out1 = self.ffn(out1, training=training)
 
-        ffn_output = self.ffn(out1, training=training)
-        ffn_output = self.ffn2(ffn_output, training=training)
+        attn, attn_weights = self.mha(
+            query=out1, value=out1, key=out1, attention_mask=mask, training=training, return_attention_scores=True
+        )
+        #out1 = self.layernorm1(x + attn, training=training)
+
+        #ffn_output = self.ffn(out1, training=training)
+        ffn_output = self.ffn2(attn + x, training=training)
         # ffn_output = self.dropout(ffn_output, training=training)
         
-        out2 = self.layernorm2(ffn_output, training=training)
+        ffn_output = self.layernorm2(ffn_output, training=training)
 
         if mask is not None:
-            out2 = out2 * broadcast_float_mask
+            ffn_output = ffn_output * broadcast_float_mask
 
-        return out2, attn_weights
+        return ffn_output, attn_weights
 
 
 class Encoder(tf.keras.layers.Layer):
@@ -102,8 +105,8 @@ class Encoder(tf.keras.layers.Layer):
             maximum_positions, positional_encoding_dims
         )
 
-        self.layernorm1 = tf.keras.layers.LayerNormalization()
-        self.layernorm2 = tf.keras.layers.LayerNormalization()
+        #self.layernorm1 = tf.keras.layers.LayerNormalization()
+        #self.layernorm2 = tf.keras.layers.LayerNormalization()
 
         self.dense1 = Dense(intermediate_dims, activation=activation)
         self.dense2 = Dense(intermediate_dims - positional_encoding_dims)
@@ -178,6 +181,7 @@ class BEAKER(tf.keras.Model):
         )
 
     def call(self, inp, training=False, mask=None):
+        print("Confirming changes called, 7 July 2023")
         enc_output, attention_weights, all_outputs = self.encoder(inp, training, mask)
         if mask is not None:
             broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)

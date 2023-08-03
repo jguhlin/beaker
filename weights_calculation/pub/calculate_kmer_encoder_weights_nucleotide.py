@@ -4,14 +4,23 @@ import sys
 # Number of dimensions we are encoding the vector as
 k = int(sys.argv[1])
 dims = int(sys.argv[2])
-batch_size = 128
+batch_size = 512 # Previously 128
 # activation = "relu"
 # loss = "huber"
 # bias = True
 
 activation = str(sys.argv[3])
 loss = str(sys.argv[4])
-bias = bool(sys.argv[5])
+#bias = bool(sys.argv[5])
+bias = sys.argv[5]
+
+if bias == "True":
+    bias = True
+else:
+    bias = False
+
+print("Bias is....")
+print(bias)
 
 ## No more manual settings here!
 kmer_space = 5**k
@@ -85,7 +94,7 @@ ds = (
         ),
     )
     .batch(batch_size)
-    .prefetch(256)
+    .prefetch(8192 * 2)
 )
 
 vds = (
@@ -101,7 +110,7 @@ vds = (
         ),
     )
     .batch(batch_size)
-    .prefetch(256)
+    .prefetch(2048)
 )
 
 
@@ -114,7 +123,7 @@ def model2(opt):
         dims,
         activation=activation,
         name="Magic",
-        use_bias=bias,
+        use_bias=False,
         dtype="float32",
         kernel_initializer=tf.keras.initializers.RandomNormal(
             mean=0.0, stddev=0.05, seed=42
@@ -164,8 +173,9 @@ def model2(opt):
     return magic, reverso_layer, model
 
 
+# Best so far!
 opt = tf.keras.optimizers.AdamW(learning_rate=1e-3, weight_decay=1e-2)
-# opt = tf.keras.optimizers.experimental.Nadam()
+#opt = tf.keras.optimizers.experimental.SGD(learning_rate=1e-2)
 
 
 magic, reverso_layer, model = model2(opt)
@@ -184,14 +194,14 @@ logcb = tf.keras.callbacks.CSVLogger(
 
 
 cur_epoch = 0
-epochs = 256
+epochs = 64
 model.fit(
     ds,
     initial_epoch=cur_epoch,
-    validation_data=vds,
+    # validation_data=vds,
     epochs=cur_epoch + epochs,
-    steps_per_epoch=2048,
-    validation_steps=256,
+    steps_per_epoch=1024,
+    # validation_steps=256,
     verbose=1,
     shuffle=False,
     callbacks=[logcb],
@@ -213,12 +223,16 @@ magic_weights = magic.get_weights()
 # for i in magic_weights:
 #    print(tf.shape(i))
 
-# print(magic_weights[0])
-# print(tf.shape(magic_weights[0]))
+#print(magic_weights[0])
+#print(magic_weights)
+#print(np.shape(magic_weights[0]))
+#print(np.shape(magic_weights[1]))
+
+#print(tf.shape(magic_weights[0]))
 
 np.save(
-    "weights/wide_singlelayer_k{}_23Apr2023_{}_nucleotide_model_magic_dims_{}_epochs_{}_loss_{}_bias_{}".format(
-        k, activation, dims, epochs, loss, bias
+    "weights/wide_singlelayer_k{}_16May2023_{}_nucleotide_model_magic_dims_{}_epochs_{}_loss_{}_bias_{}".format(
+        k, activation, dims, epochs, loss, str(bias)
     ),
     magic_weights,
 )
@@ -227,8 +241,8 @@ np.save(
 
 reverso_weights = reverso_layer.get_weights()
 
-filename = "weights/wide_singlelayer_k{}_23Apr2023_{}_nucleotide_model_reverso_dims_{}_epochs_{}_loss_{}_bias_{}".format(
-    k, activation, dims, epochs, loss
+filename = "weights/wide_singlelayer_k{}_16May2023_{}_nucleotide_model_reverso_dims_{}_epochs_{}_loss_{}_bias_{}".format(
+    k, activation, dims, epochs, loss, str(bias)
 )
 
 reverso_layer.save_weights(filename)
