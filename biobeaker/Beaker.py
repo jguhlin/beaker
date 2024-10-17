@@ -181,8 +181,7 @@ class BEAKER(tf.keras.Model):
         )
 
     def call(self, inp, training=False, mask=None):
-        print("Confirming changes called, 7 July 2023")
-        enc_output, attention_weights, all_outputs = self.encoder(inp, training, mask)
+        enc_output, attention_weights, all_outputs = self.encoder(inp, training=training, mask=mask)
         if mask is not None:
             broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
             enc_output = enc_output * broadcast_float_mask

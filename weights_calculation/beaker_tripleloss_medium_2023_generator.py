@@ -45,7 +45,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model, Sequential
 
 # Hyper parameters
-k = 21
+k = 11
 window_size = 32  # up to 511
 num_layers = 8
 embedding_dims = 32
