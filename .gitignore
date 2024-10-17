@@ -134,3 +134,6 @@ weights_calculation/experiments/
 checkpoint/
 weights/
 beaker_medium_nt_triple2023_generator/
+# pixi environments
+.pixi
+*.egg-info

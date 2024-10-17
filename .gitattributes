@@ -4,3 +4,5 @@ precomputed/weights_wide_singlelayer_k21_3Aug2020model_21_dims_32_epochs256.npy 
 example/Arabidopsis_chr1.sfai filter=lfs diff=lfs merge=lfs -text
 example/Arabidopsis_chr1.sfasta filter=lfs diff=lfs merge=lfs -text
 *.npy filter=lfs diff=lfs merge=lfs -text
+# GitHub syntax highlighting
+pixi.lock linguist-language=YAML linguist-generated=true

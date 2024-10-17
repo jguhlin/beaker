@@ -2,7 +2,7 @@
 authors = ["Joseph Guhlin <joseph.guhlin@gmail.com>"]
 channels = ["conda-forge"]
 description = "Add a short description here"
-name = "kmer_encoder"
+name = "beaker"
 platforms = ["linux-64"]
 version = "0.1.0"
 
