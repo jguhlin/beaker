@@ -153,8 +153,8 @@ reconstruction_loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)
 
 # Training loop parameters
-num_epochs = 64
-steps_per_epoch = 1024  # Number of steps per epoch
+num_epochs = 128
+steps_per_epoch = 2048  # Number of steps per epoch
 loss_weights = [1, 0.3, 0.3]
 
 # Device configuration
